@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import { Link } from 'react-router-dom'
 
 const roleCapabilities: Record<string, string[]> = {
   SuperAdmin: ['Gestionar usuarios', 'Ver auditoria', 'Gestion total de productos'],
@@ -25,6 +26,21 @@ export const DashboardPage = () => {
             <p className="text-sm font-medium text-slate-800">{capability}</p>
           </article>
         ))}
+      </div>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link to="/products" className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white">
+          Ir a productos
+        </Link>
+        {user?.role === 'SuperAdmin' && (
+          <>
+            <Link to="/users" className="rounded-md border border-slate-300 px-4 py-2 text-sm">
+              Gestionar usuarios
+            </Link>
+            <Link to="/audit-logs" className="rounded-md border border-slate-300 px-4 py-2 text-sm">
+              Ver auditoria
+            </Link>
+          </>
+        )}
       </div>
     </section>
   )
