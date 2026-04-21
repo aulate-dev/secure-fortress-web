@@ -20,7 +20,7 @@ interface AuthContextValue {
   isWarningVisible: boolean
   warningSecondsLeft: number
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const STORAGE_KEY = 'secure_fortress_user'
@@ -85,7 +85,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [persistUser],
   )
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout')
+    } catch {
+      // Backend logout endpoint may not be available yet.
+    }
     clearUser()
   }, [clearUser])
 
