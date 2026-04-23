@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
+import { buttonClassNames } from '../components/ui/button-classes'
 
 const roleCapabilities: Record<string, string[]> = {
   SuperAdmin: ['Gestionar usuarios', 'Ver auditoria', 'Gestion total de productos'],
@@ -28,15 +29,15 @@ export const DashboardPage = () => {
         ))}
       </div>
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link to="/products" className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white">
+        <Link to="/products" className={buttonClassNames()}>
           Ir a productos
         </Link>
         {user?.role === 'SuperAdmin' && (
           <>
-            <Link to="/users" className="rounded-md border border-slate-300 px-4 py-2 text-sm">
+            <Link to="/users" className={buttonClassNames({ variant: 'secondary' })}>
               Gestionar usuarios
             </Link>
-            <Link to="/audit-logs" className="rounded-md border border-slate-300 px-4 py-2 text-sm">
+            <Link to="/audit-logs" className={buttonClassNames({ variant: 'secondary' })}>
               Ver auditoria
             </Link>
           </>

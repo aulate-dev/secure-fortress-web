@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react'
+import {
+  StandardTable,
+  StandardTableBody,
+  StandardTableCell,
+  StandardTableHead,
+  StandardTableHeaderCell,
+} from '../components/ui/StandardTable'
 import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
 import { extractApiErrorMessage } from '../lib/http-error'
@@ -37,43 +44,41 @@ export const UsersPage = () => {
         <p className="text-sm text-slate-600">Usuarios registrados con su rol y ultimo acceso.</p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-700">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Usuario</th>
-              <th className="px-4 py-3 font-semibold">Correo</th>
-              <th className="px-4 py-3 font-semibold">Rol</th>
-              <th className="px-4 py-3 font-semibold">Ultimo login</th>
-            </tr>
-          </thead>
-          <tbody>
+      <StandardTable caption="Usuarios y roles del sistema">
+        <StandardTableHead>
+          <tr>
+            <StandardTableHeaderCell>Usuario</StandardTableHeaderCell>
+            <StandardTableHeaderCell>Correo</StandardTableHeaderCell>
+            <StandardTableHeaderCell>Rol</StandardTableHeaderCell>
+            <StandardTableHeaderCell>Ultimo login</StandardTableHeaderCell>
+          </tr>
+        </StandardTableHead>
+        <StandardTableBody>
             {isLoading && (
               <tr>
-                <td colSpan={4} className="px-4 py-4 text-slate-500">
+                <StandardTableCell muted colSpan={4}>
                   Cargando usuarios...
-                </td>
+                </StandardTableCell>
               </tr>
             )}
             {!isLoading && users.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-4 text-slate-500">
+                <StandardTableCell muted colSpan={4}>
                   No hay usuarios disponibles.
-                </td>
+                </StandardTableCell>
               </tr>
             )}
             {!isLoading &&
               users.map((user) => (
-                <tr key={user.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3">{user.username}</td>
-                  <td className="px-4 py-3">{user.email}</td>
-                  <td className="px-4 py-3">{user.role}</td>
-                  <td className="px-4 py-3">{formatLastLogin(user.last_login)}</td>
+                <tr key={user.id} className="transition-all hover:bg-slate-50">
+                  <StandardTableCell>{user.username}</StandardTableCell>
+                  <StandardTableCell>{user.email}</StandardTableCell>
+                  <StandardTableCell>{user.role}</StandardTableCell>
+                  <StandardTableCell>{formatLastLogin(user.last_login)}</StandardTableCell>
                 </tr>
               ))}
-          </tbody>
-        </table>
-      </div>
+        </StandardTableBody>
+      </StandardTable>
     </section>
   )
 }

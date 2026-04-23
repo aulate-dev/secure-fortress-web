@@ -3,6 +3,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import { Button } from '../components/ui/Button'
+import {
+  StandardTable,
+  StandardTableBody,
+  StandardTableCell,
+  StandardTableHead,
+  StandardTableHeaderCell,
+} from '../components/ui/StandardTable'
 import { api } from '../lib/api'
 import { extractApiErrorMessage } from '../lib/http-error'
 import { type ProductFormData, type ProductFormInput, productSchema } from '../schemas/product.schema'
@@ -132,74 +140,65 @@ export const ProductsPage = () => {
           <p className="text-sm text-slate-600">Inventario central de Secure Fortress.</p>
         </div>
         {canManageProducts && (
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-          >
+          <Button onClick={openCreateModal}>
             Crear producto
-          </button>
+          </Button>
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-700">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Codigo</th>
-              <th className="px-4 py-3 font-semibold">Nombre</th>
-              <th className="px-4 py-3 font-semibold">Cantidad</th>
-              <th className="px-4 py-3 font-semibold">Precio</th>
-              {canManageProducts && <th className="px-4 py-3 font-semibold">Acciones</th>}
-            </tr>
-          </thead>
-          <tbody>
+      <StandardTable caption="Inventario de productos">
+        <StandardTableHead>
+          <tr>
+            <StandardTableHeaderCell>Codigo</StandardTableHeaderCell>
+            <StandardTableHeaderCell>Nombre</StandardTableHeaderCell>
+            <StandardTableHeaderCell>Cantidad</StandardTableHeaderCell>
+            <StandardTableHeaderCell>Precio</StandardTableHeaderCell>
+            {canManageProducts && <StandardTableHeaderCell>Acciones</StandardTableHeaderCell>}
+          </tr>
+        </StandardTableHead>
+        <StandardTableBody>
             {isLoading && (
               <tr>
-                <td className="px-4 py-4 text-slate-500" colSpan={canManageProducts ? 5 : 4}>
+                <StandardTableCell muted colSpan={canManageProducts ? 5 : 4}>
                   Cargando productos...
-                </td>
+                </StandardTableCell>
               </tr>
             )}
             {!isLoading && products.length === 0 && (
               <tr>
-                <td className="px-4 py-4 text-slate-500" colSpan={canManageProducts ? 5 : 4}>
+                <StandardTableCell muted colSpan={canManageProducts ? 5 : 4}>
                   No hay productos registrados.
-                </td>
+                </StandardTableCell>
               </tr>
             )}
             {!isLoading &&
               products.map((product) => (
-                <tr key={product.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3">{product.sku_alfanumerico}</td>
-                  <td className="px-4 py-3">{product.nombre}</td>
-                  <td className="px-4 py-3">{product.cantidad}</td>
-                  <td className="px-4 py-3">${Number(product.precio).toFixed(2)}</td>
+                <tr key={product.id} className="transition-all hover:bg-slate-50">
+                  <StandardTableCell>{product.sku_alfanumerico}</StandardTableCell>
+                  <StandardTableCell>{product.nombre}</StandardTableCell>
+                  <StandardTableCell>{product.cantidad}</StandardTableCell>
+                  <StandardTableCell>${Number(product.precio).toFixed(2)}</StandardTableCell>
                   {canManageProducts && (
-                    <td className="px-4 py-3">
+                    <StandardTableCell>
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(product)}
-                          className="rounded border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
-                        >
+                        <Button size="sm" variant="secondary" onClick={() => openEditModal(product)}>
                           Editar
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
                           onClick={() => void handleDelete(product)}
-                          className="rounded border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50"
+                          className="border-red-300 text-red-700 hover:bg-red-50"
                         >
                           Eliminar
-                        </button>
+                        </Button>
                       </div>
-                    </td>
+                    </StandardTableCell>
                   )}
                 </tr>
               ))}
-          </tbody>
-        </table>
-      </div>
+        </StandardTableBody>
+      </StandardTable>
 
       {isModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4">
@@ -215,7 +214,7 @@ export const ProductsPage = () => {
                 <input
                   id="sku"
                   {...register('sku_alfanumerico')}
-                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
                 {errors.sku_alfanumerico && (
                   <p className="mt-1 text-xs text-red-600">{errors.sku_alfanumerico.message}</p>
@@ -228,7 +227,7 @@ export const ProductsPage = () => {
                 <input
                   id="nombre"
                   {...register('nombre')}
-                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
                 {errors.nombre && <p className="mt-1 text-xs text-red-600">{errors.nombre.message}</p>}
               </div>
@@ -239,7 +238,7 @@ export const ProductsPage = () => {
                 <textarea
                   id="descripcion"
                   {...register('descripcion')}
-                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
                 {errors.descripcion && (
                   <p className="mt-1 text-xs text-red-600">{errors.descripcion.message}</p>
@@ -256,7 +255,7 @@ export const ProductsPage = () => {
                     min={0}
                     step="1"
                     {...register('cantidad')}
-                    className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                   {errors.cantidad && (
                     <p className="mt-1 text-xs text-red-600">{errors.cantidad.message}</p>
@@ -272,27 +271,19 @@ export const ProductsPage = () => {
                     min={0}
                     step="0.01"
                     {...register('precio')}
-                    className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                   {errors.precio && <p className="mt-1 text-xs text-red-600">{errors.precio.message}</p>}
                 </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
+                <Button variant="secondary" onClick={closeModal}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
-                >
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Guardando...' : modalMode === 'create' ? 'Crear' : 'Actualizar'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
