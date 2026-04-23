@@ -10,11 +10,11 @@ import {
   type ReactNode,
 } from 'react'
 import { api, setUnauthorizedHandler } from '../lib/api'
-import { extractApiErrorMessage } from '../lib/http-error'
 import type { AuthUser } from '../types/auth'
 
 interface AuthContextValue {
   user: AuthUser | null
+  sourceIp: string | null
   isAuthenticated: boolean
   isBootstrapping: boolean
   isWarningVisible: boolean
@@ -23,66 +23,80 @@ interface AuthContextValue {
   logout: () => Promise<void>
 }
 
-const STORAGE_KEY = 'secure_fortress_user'
+interface LoginResponse {
+  user: AuthUser
+  ipAddress?: string
+}
+
+interface SessionContextResponse {
+  id: number
+  email: string
+  username: string
+  role: AuthUser['role']
+  sourceIp: string
+}
+
 const SESSION_WARNING_MS = 4 * 60 * 1000
 const SESSION_TIMEOUT_MS = 5 * 60 * 1000
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-const readStoredUser = (): AuthUser | null => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      return null
-    }
-
-    const parsed = JSON.parse(raw) as AuthUser
-    if (!parsed?.id || !parsed?.email || !parsed?.username || !parsed?.role) {
-      return null
-    }
-    return parsed
-  } catch {
-    return null
-  }
-}
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(() => readStoredUser())
-  const [isBootstrapping, setIsBootstrapping] = useState(() => !!readStoredUser())
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [sourceIp, setSourceIp] = useState<string | null>(null)
+  const [isBootstrapping, setIsBootstrapping] = useState(true)
   const [isWarningVisible, setIsWarningVisible] = useState(false)
   const [warningSecondsLeft, setWarningSecondsLeft] = useState(0)
   const lastActivityRef = useRef<number>(0)
 
   const clearUser = useCallback(() => {
     setUser(null)
-    localStorage.removeItem(STORAGE_KEY)
+    setSourceIp(null)
     setIsWarningVisible(false)
     setWarningSecondsLeft(0)
   }, [])
 
   const persistUser = useCallback((nextUser: AuthUser) => {
     setUser(nextUser)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
     lastActivityRef.current = Date.now()
     setIsWarningVisible(false)
     setWarningSecondsLeft(0)
   }, [])
 
-  const validateSession = useCallback(async () => {
+  const loadSessionContext = useCallback(async () => {
     try {
-      await api.get('/products')
+      const { data } = await api.get<SessionContextResponse>('/auth/session-context', {
+        withCredentials: true,
+      })
+      setSourceIp(data.sourceIp ?? null)
+      setUser((previousUser) => ({
+        id: data.id,
+        email: data.email || previousUser?.email || '',
+        username: data.username || previousUser?.username || 'Usuario',
+        role: data.role || previousUser?.role || 'Registrador',
+        ipAddress: data.sourceIp ?? previousUser?.ipAddress ?? null,
+        last_ip: data.sourceIp ?? previousUser?.last_ip ?? null,
+      }))
     } catch (error) {
-      clearUser()
-      throw new Error(extractApiErrorMessage(error))
+      const status = Number((error as { response?: { status?: number } })?.response?.status ?? 0)
+      if (status === 401) {
+        clearUser()
+        return
+      }
+      setSourceIp(null)
     }
   }, [clearUser])
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const { data } = await api.post<{ user: AuthUser }>('/auth/login', { email, password })
-      persistUser(data.user)
+      const { data } = await api.post<LoginResponse>('/auth/login', { email, password })
+      persistUser({
+        ...data.user,
+        ipAddress: data.ipAddress ?? data.user.ipAddress ?? data.user.last_ip ?? null,
+      })
+      await loadSessionContext()
     },
-    [persistUser],
+    [loadSessionContext, persistUser],
   )
 
   const logout = useCallback(async () => {
@@ -100,17 +114,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [clearUser])
 
   useEffect(() => {
-    if (!user) {
-      return
-    }
-
     const checkSession = async () => {
-      await validateSession()
-      setIsBootstrapping(false)
+      try {
+        await loadSessionContext()
+      } catch (error) {
+        const status = Number((error as { response?: { status?: number } })?.response?.status ?? 0)
+        if (status === 401) {
+          clearUser()
+        }
+      } finally {
+        setIsBootstrapping(false)
+      }
     }
 
     void checkSession()
-  }, [user, validateSession])
+  }, [clearUser, loadSessionContext])
 
   useEffect(() => {
     if (!user) {
@@ -157,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      sourceIp,
       isAuthenticated: !!user,
       isBootstrapping,
       isWarningVisible,
@@ -164,7 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       logout,
     }),
-    [isBootstrapping, isWarningVisible, login, logout, user, warningSecondsLeft],
+    [isBootstrapping, isWarningVisible, login, logout, sourceIp, user, warningSecondsLeft],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

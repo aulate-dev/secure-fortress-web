@@ -4,9 +4,31 @@ import { useAuth } from '../context/AuthContext'
 import { SessionTimeoutBanner } from './SessionTimeoutBanner'
 
 export const AppLayout = () => {
-  const { user, logout } = useAuth()
+  const { user, sourceIp, logout } = useAuth()
   const isSuperAdmin = user?.role === 'SuperAdmin'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const displayedIp = sourceIp ?? user?.last_ip ?? user?.ipAddress
+  const rolePresentation = useMemo(() => {
+    if (user?.role === 'SuperAdmin') {
+      return {
+        title: 'Secure Fortress | Panel de Administración',
+        badgeLabel: 'SuperAdmin',
+        badgeClassName: 'bg-red-100 text-red-700 border border-red-200',
+      }
+    }
+    if (user?.role === 'Auditor') {
+      return {
+        title: 'Secure Fortress | Módulo de Auditoría',
+        badgeLabel: 'Auditor',
+        badgeClassName: 'bg-blue-100 text-blue-700 border border-blue-200',
+      }
+    }
+    return {
+      title: 'Secure Fortress | Gestión de Inventario',
+      badgeLabel: 'Registrador',
+      badgeClassName: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+    }
+  }, [user?.role])
 
   const navItems = useMemo(
     () => [
@@ -134,13 +156,19 @@ export const AppLayout = () => {
                 </button>
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Secure Fortress</p>
-                  <h2 className="text-sm font-semibold text-slate-900 sm:text-base">Panel administrativo</h2>
+                  <h2 className="text-sm font-semibold text-slate-900 sm:text-base">{rolePresentation.title}</h2>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    Usuario: <span className="font-semibold text-slate-900">{user?.username ?? 'Usuario'}</span> | IP
+                    origen: <span className="font-semibold text-slate-900">{displayedIp ?? 'No disponible'}</span>
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <p className="text-sm text-slate-600">
-                  Rol: <span className="font-semibold text-slate-900">{user?.role}</span>
-                </p>
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${rolePresentation.badgeClassName}`}
+                >
+                  {rolePresentation.badgeLabel}
+                </span>
                 <button
                   type="button"
                   onClick={() => void logout()}

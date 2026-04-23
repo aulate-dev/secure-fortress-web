@@ -10,11 +10,13 @@ export interface ManagedUser {
 }
 
 export interface AuditLog {
-  id: number
+  id?: number
   event_type: string
-  user_id: number | null
+  user_id?: number | null
+  username?: string | null
   details: string
   ip_address: string
-  route: string
-  created_at: string
+  route?: string
+  created_at?: string
+  timestamp?: string
 }

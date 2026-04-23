@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../context/AuthContext'
@@ -15,13 +15,18 @@ export const LoginPage = () => {
   const destination = location.state?.from?.pathname ?? '/dashboard'
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: 'onSubmit',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   })
+  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' })
+  const hasPasswordInput = passwordValue.length > 0
+  const meetsMinPasswordLength = passwordValue.trim().length >= 12
 
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null)
@@ -97,6 +102,11 @@ export const LoginPage = () => {
                   : 'border-slate-300 focus:border-blue-500'
               }`}
             />
+            {hasPasswordInput && !meetsMinPasswordLength && !errors.password && (
+              <p className="mt-1 text-xs text-amber-700">
+                La contrasena debe tener al menos 12 caracteres.
+              </p>
+            )}
             {errors.password && (
               <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
             )}
@@ -108,7 +118,7 @@ export const LoginPage = () => {
             </div>
           )}
 
-          <Button type="submit" disabled={isSubmitting} fullWidth>
+          <Button type="submit" disabled={isSubmitting || !meetsMinPasswordLength} fullWidth>
             {isSubmitting ? 'Validando...' : 'Ingresar'}
           </Button>
         </form>

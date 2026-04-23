@@ -5,4 +5,6 @@ export interface AuthUser {
   username: string
   email: string
   role: UserRole
+  last_ip?: string | null
+  ipAddress?: string | null
 }

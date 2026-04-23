@@ -11,7 +11,13 @@ import { api } from '../lib/api'
 import { extractApiErrorMessage } from '../lib/http-error'
 import type { AuditLog } from '../types/admin'
 
-const formatDate = (value: string) => new Date(value).toLocaleString('es-MX')
+const formatDate = (value?: string) => {
+  if (!value) {
+    return 'Sin fecha'
+  }
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Sin fecha' : date.toLocaleString('es-MX')
+}
 
 export const AuditLogsPage = () => {
   const { showToast } = useToast()
@@ -64,11 +70,11 @@ export const AuditLogsPage = () => {
               </tr>
             )}
             {!isLoading &&
-              logs.map((log) => (
-                <tr key={log.id} className="transition-all hover:bg-slate-50">
-                  <StandardTableCell>{formatDate(log.created_at)}</StandardTableCell>
+              logs.map((log, index) => (
+                <tr key={log.id ?? `${log.event_type}-${log.timestamp ?? log.created_at ?? index}`} className="transition-all hover:bg-slate-50">
+                  <StandardTableCell>{formatDate(log.created_at ?? log.timestamp)}</StandardTableCell>
                   <StandardTableCell>{log.event_type}</StandardTableCell>
-                  <StandardTableCell>{log.user_id ?? 'Sistema'}</StandardTableCell>
+                  <StandardTableCell>{log.username ?? 'Intento Fallido'}</StandardTableCell>
                   <StandardTableCell>{log.ip_address}</StandardTableCell>
                   <StandardTableCell>{`${log.details} (${log.route})`}</StandardTableCell>
                 </tr>
