@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# 🛡️ Secure Fortress - Web Interface
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este repositorio contiene la interfaz de usuario construida con **React, TypeScript y Vite**. Está diseñada para interactuar con la Secure Fortress API y permite la gestión de inventario y visualización de registros de auditoría.
 
-Currently, two official plugins are available:
+## 🚀 Guía de Configuración (Solo Docker)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Levantar el Entorno
+Este comando prepara el entorno de desarrollo de Vite dentro de un contenedor:
+```bash
+docker-compose up -d --build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Acceso a la Plataforma
+Una vez que el contenedor esté corriendo, la aplicación estará disponible en:
+👉 **URL:** `http://localhost:5173`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🛠️ Características Implementadas
+
+- **Dashboard Dinámico:** Visualización de productos según el rol del usuario.
+- **Gestión de Sesión:** Implementación de persistencia de sesión segura y logout automático por inactividad.
+- **Seguridad en UI:** - Protección de rutas por roles (RBAC).
+  - Manejo de cookies `HttpOnly` para evitar ataques XSS.
+  - Validación de formularios y sanitización de entradas.
+- **Logs de Auditoría:** Interfaz para que el `SuperAdmin` visualice logs de sistema en tiempo real.
+
+---
+
+## 🔐 Pruebas de Acceso (Integración)
+
+Para que el frontend funcione correctamente, asegúrese de que el **Backend API** esté arriba y los **seeds** hayan sido ejecutados. Use las siguientes credenciales para probar los flujos:
+
+| Nivel de Acceso | Email | Password |
+| :--- | :--- | :--- |
+| **Control Total** | `admin@fortress.com` | `Secur3Seed!Admin2026` |
+| **Solo Lectura** | `auditor@fortress.com` | `Secur3Seed!Audit2026` |
+| **Gestión Stock** | `registrador@fortress.com` | `Secur3Seed!Reg2026` |
+
+---
+
+## 🐳 Comandos Útiles de Docker
+
+- **Ver logs de Vite:** `docker-compose logs -f secure-fortress-web`
+- **Reiniciar el contenedor:**
+  `docker-compose restart secure-fortress-web`
+- **Limpieza de volúmenes (en caso de errores de caché):**
+  `docker-compose down -v && docker-compose up -d`
+
+---
+
+> **⚠️ Nota de Red:** El frontend está configurado para comunicarse con la API en `http://localhost:3000`. Si cambias el puerto del backend en el archivo `.env`, asegúrate de actualizar la variable `VITE_API_URL` en el entorno del frontend.
